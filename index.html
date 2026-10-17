@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario de Amor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-pink-100 via-red-50 to-pink-200 min-h-screen flex items-center justify-center p-4 font-sans text-gray-800">
+
+    <div class="max-w-xl w-full bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-pink-200 relative overflow-hidden">
+        
+        <!-- Pantalla de Inicio -->
+        <div id="welcome-screen" class="text-center space-y-6">
+            <div class="inline-block bg-pink-100 p-4 rounded-full text-pink-600 shadow-inner animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-extrabold text-pink-600">¡Cuestionario de Nuestra Historia! 💕</h1>
+            <p class="text-gray-600 leading-relaxed">
+                Demostrá cuánto sabés sobre nosotros y ganá un premio increíble al final. ¡Preparate para responder!
+            </p>
+            <button onclick="startQuiz()" class="w-full py-3 px-6 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-2xl shadow-lg transform transition active:scale-95">
+                Comenzar Cuestionario ✨
+            </button>
+        </div>
+
+        <!-- Pantalla de Preguntas -->
+        <div id="quiz-screen" class="hidden space-y-6">
+            <div class="flex justify-between items-center text-sm font-semibold text-pink-500 border-b pb-3">
+                <span id="question-counter">Pregunta 1 de 6</span>
+                <span id="score-display">Puntaje: 0</span>
+            </div>
+            
+            <h2 id="question-title" class="text-xl font-bold text-gray-800 min-h-[60px]"></h2>
+
+            <div id="options-container" class="space-y-3">
+                <!-- Las opciones se inyectan dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Pantalla de Resultados -->
+        <div id="result-screen" class="hidden text-center space-y-6">
+            <div class="text-6xl animate-bounce">🏆</div>
+            <h2 class="text-3xl font-extrabold text-pink-600">¡Felicitaciones!</h2>
+            <p id="result-message" class="text-lg text-gray-700 font-medium"></p>
+            
+            <div class="bg-pink-50 border-2 border-dashed border-pink-300 p-6 rounded-2xl space-y-2">
+                <h3 class="text-sm font-bold tracking-wider text-pink-500 uppercase">¡Premio Desbloqueado! 📚☕</h3>
+                <p class="text-2xl font-extrabold text-gray-900">🎁 ¡El libro "Hasta el próximo café" de Yenny - El Ateneo!</p>
+                <p class="text-xs text-gray-500">Preparate para pasar a retirarlo y compartir un cafecito. ¡Mostrale esta pantalla a tu amor para reclamarlo!</p>
+            </div>
+
+            <button onclick="restartQuiz()" class="py-2 px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl text-sm transition">
+                Volver a Jugar 🔄
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "¿Cuándo nos conocimos?",
+                options: ["14/07/2013", "14/11/2013", "20/07/2014", "15/05/2013"],
+                correct: 0
+            },
+            {
+                question: "¿Quiénes conviven actualmente con nosotros?",
+                options: ["Negan y Bicho", "Simona y Perro", "Rocky y Luna", "Negan y Firulais"],
+                correct: 0
+            },
+            {
+                question: "¿De qué club de fútbol somos ambos?",
+                options: ["Boca Juniors", "River Plate", "Racing", "Independiente"],
+                correct: 2
+            },
+            {
+                question: "¿Cómo soy según yo?",
+                options: ["Tímido y callado", "Fachero y divertido", "Serio y aburrido", "Enojón y casero"],
+                correct: 1
+            },
+            {
+                question: "¿De qué estoy a punto de recibirme?",
+                options: ["Ingeniero en Sistemas", "Técnico en Ciencia de Datos", "Licenciado en Matemáticas", "Analista de Sistemas"],
+                correct: 1
+            },
+            {
+                question: "¿Desde cuándo somos novios oficialmente?",
+                options: ["14/07/2013", "01/01/2014", "14/11/2013", "25/12/2013"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionCounter = document.getElementById('question-counter');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionTitle = document.getElementById('question-title');
+        const optionsContainer = document.getElementById('options-container');
+        const resultMessage = document.getElementById('result-message');
+
+        function startQuiz() {
+            welcomeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            questionCounter.innerText = `Pregunta ${currentQuestionIndex + 1} de ${questions.length}`;
+            scoreDisplay.innerText = `Puntaje: ${score}`;
+            questionTitle.innerText = q.question;
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.className = "w-full text-left p-4 rounded-xl border border-gray-200 bg-white hover:bg-pink-50 hover:border-pink-300 font-medium transition shadow-sm";
+                button.onclick = () => selectOption(index);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectOption(selectedIndex) {
+            const q = questions[currentQuestionIndex];
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            if (selectedIndex === q.correct) {
+                buttons[selectedIndex].classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+                score += 10;
+            } else {
+                buttons[selectedIndex].classList.add('bg-red-100', 'border-red-400', 'text-red-800');
+                buttons[q.correct].classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+            }
+
+            for (let btn of buttons) {
+                btn.disabled = true;
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1200);
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            resultMessage.innerText = `¡Obtuviste ${score} de 60 puntos posibles! Conoces nuestra historia a la perfección. 💕`;
+            
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function restartQuiz() {
+            resultScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
